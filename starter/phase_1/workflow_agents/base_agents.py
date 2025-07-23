@@ -169,7 +169,7 @@ class RAGKnowledgePromptAgent:
         Returns:
         list: The embedding vector.
         """
-        client = OpenAI(base_url="https://openai.vocareum.com/v1", api_key=self.openai_api_key)
+        client = OpenAI(base_url=self.base_url, api_key=self.openai_api_key)
         response = client.embeddings.create(
             model="text-embedding-3-large",
             input=text,
@@ -240,6 +240,7 @@ class RAGKnowledgePromptAgent:
         Returns:
         DataFrame: DataFrame containing text chunks and their embeddings.
         """
+        # Assuming chunks are already calculated. Improvement: check if file exists and if not: chunk text (but: needs text to chunk)
         df = pd.read_csv(f"chunks-{self.unique_filename}", encoding='utf-8')
         df['embeddings'] = df['text'].apply(self.get_embedding)
         df.to_csv(f"embeddings-{self.unique_filename}", encoding='utf-8', index=False)
@@ -256,6 +257,7 @@ class RAGKnowledgePromptAgent:
         str: Response derived from the most similar chunk in knowledge.
         """
         prompt_embedding = self.get_embedding(prompt)
+        # Assuming embeddings are already calculated. Improvement: check if file exists and if not: generate embeddings.
         df = pd.read_csv(f"embeddings-{self.unique_filename}", encoding='utf-8')
         df['embeddings'] = df['embeddings'].apply(lambda x: np.array(eval(x)))
         df['similarity'] = df['embeddings'].apply(lambda emb: self.calculate_similarity(prompt_embedding, emb))
@@ -273,36 +275,61 @@ class RAGKnowledgePromptAgent:
         )
 
         return response.choices[0].message.content
+    
+    def respond(self, prompt):
+        return self.find_prompt_in_knowledge(prompt)
 
-'''
 class EvaluationAgent:
     
-    def __init__(self, openai_api_key, persona, evaluation_criteria, worker_agent, max_interactions):
-        # Initialize the EvaluationAgent with given attributes.
-        # TODO: 1 - Declare class attributes here
+    def __init__(self, openai_api_key, persona, evaluation_criteria, worker_agent, max_interactions, base_url="https://openai.vocareum.com/v1", model="gpt-4.1-nano"):
+        """
+        Initializes the EvaluationAgent with API credentials and configuration settings.
+
+        Parameters:
+            openai_api_key (str): The API key for OpenAI.
+            persona (str): The persona description for the agent.
+            evaluation_criteria (str): The criteria against which responses will be evaluated.
+            worker_agent (Agent object from base_agents.py): The agent that generates responses to be evaluated.
+            max_interactions (int): The maximum number of interactions allowed for evaluation.
+            base_url (str, optional): The base URL for the OpenAI API.
+                                      Defaults to "https://openai.vocareum.com/v1".
+            model (str, optional): The model to use for the API calls.
+                                   Defaults to "gpt-4.1-nano".
+        """
+        self.persona = persona
+        self.openai_api_key = openai_api_key
+        self.model = model
+        self.base_url = base_url
+        self.evaluation_criteria = evaluation_criteria
+        self.worker_agent = worker_agent
+        self.max_interactions = max_interactions
 
     def evaluate(self, initial_prompt):
         # This method manages interactions between agents to achieve a solution.
-        client = OpenAI(api_key=self.openai_api_key)
+        client = OpenAI(base_url=self.base_url, api_key=self.openai_api_key)
         prompt_to_evaluate = initial_prompt
 
-        for i in # TODO: 2 - Set loop to iterate up to the maximum number of interactions:
+        for i in range(0,self.max_interactions):
             print(f"\n--- Interaction {i+1} ---")
 
             print(" Step 1: Worker agent generates a response to the prompt")
             print(f"Prompt:\n{prompt_to_evaluate}")
-            response_from_worker = # TODO: 3 - Obtain a response from the worker agent
+            response_from_worker = self.worker_agent.respond(prompt_to_evaluate)
             print(f"Worker Agent Response:\n{response_from_worker}")
 
             print(" Step 2: Evaluator agent judges the response")
             eval_prompt = (
                 f"Does the following answer: {response_from_worker}\n"
-                f"Meet this criteria: "  # TODO: 4 - Insert evaluation criteria here
+                f"Meet this criteria: {self.evaluation_criteria}?"  
                 f"Respond Yes or No, and the reason why it does or doesn't meet the criteria."
             )
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=# TODO: 5 - Define the message structure sent to the LLM for evaluation (use temperature=0)
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": f"The persona given to you is: {self.persona}. Forget previous context."},
+                    {"role": "user", "content": f"{eval_prompt}"}
+                ],
+                temperature=0
             )
             evaluation = response.choices[0].message.content.strip()
             print(f"Evaluator Agent Evaluation:\n{evaluation}")
@@ -317,8 +344,12 @@ class EvaluationAgent:
                     f"Provide instructions to fix an answer based on these reasons why it is incorrect: {evaluation}"
                 )
                 response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=# TODO: 6 - Define the message structure sent to the LLM to generate correction instructions (use temperature=0)
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": f"The persona given to you is: {self.persona}. Forget previous context."},
+                        {"role": "user", "content": f"{instruction_prompt}"}
+                    ],
+                    temperature=0
                 )
                 instructions = response.choices[0].message.content.strip()
                 print(f"Instructions to fix:\n{instructions}")
@@ -332,8 +363,10 @@ class EvaluationAgent:
                 )
         return {
             # TODO: 7 - Return a dictionary containing the final response, evaluation, and number of iterations
+            'final_response': response_from_worker,
+            'evaluation': evaluation,
+            'num_iterations': i + 1
         }   
-'''
 
 '''
 class RoutingAgent():
