@@ -207,9 +207,10 @@ class RAGKnowledgePromptAgent:
         if len(text) <= self.chunk_size:
             return [{"chunk_id": 0, "text": text, "chunk_size": len(text)}]
 
-        chunks, start, chunk_id = [], 0, 0
+        chunks, start, chunk_id = [], self.chunk_overlap, 0
 
         while start < len(text):
+            start = start - self.chunk_overlap
             end = min(start + self.chunk_size, len(text))
             if separator in text[start:end]:
                 end = start + text[start:end].rindex(separator) + len(separator)
@@ -221,8 +222,7 @@ class RAGKnowledgePromptAgent:
                 "start_char": start,
                 "end_char": end
             })
-
-            start = end - self.chunk_overlap
+            start = end
             chunk_id += 1
 
         with open(f"chunks-{self.unique_filename}", 'w', newline='', encoding='utf-8') as csvfile:
