@@ -9,6 +9,9 @@ from datetime import datetime
 
 # DirectPromptAgent class definition
 class DirectPromptAgent:
+    """
+    An agent that directly responds to user prompts without any additional context or system prompts.
+    """
 
     def __init__(self, openai_api_key, base_url="https://openai.vocareum.com/v1", model="gpt-4.1-nano"):
         """
@@ -44,6 +47,9 @@ class DirectPromptAgent:
         
 # AugmentedPromptAgent class definition
 class AugmentedPromptAgent:
+    """
+    An agent that uses a persona to generate responses based on user prompts.
+    """
     def __init__(self, openai_api_key, persona, base_url="https://openai.vocareum.com/v1", model="gpt-4.1-nano"):
         """
         Initializes the AugmentedPromptAgent with API key, persona, base URL, and model.
@@ -78,35 +84,51 @@ class AugmentedPromptAgent:
         )
         return response.choices[0].message.content.strip()
 
-'''
 # KnowledgeAugmentedPromptAgent class definition
 class KnowledgeAugmentedPromptAgent:
-    def __init__(self, openai_api_key, persona, knowledge):
-        """Initialize the agent with provided attributes."""
-        self.persona = persona
-        # TODO: 1 - Create an attribute to store the agent's knowledge.
-        self.openai_api_key = openai_api_key
+    """
+    An agent that uses a persona and a knowledge base to generate responses. It only consults the knowledge base for answers.
+    """
+    def __init__(self, openai_api_key, persona, knowledge, base_url="https://openai.vocareum.com/v1", model="gpt-4.1-nano"):
+        """
+        Initializes the KnowledgeAugmentedPromptAgent with API key, persona, knowledge, base URL, and model.
 
-    def respond(self, input_text):
+        Args:
+            openai_api_key (str): The API key for OpenAI.
+            persona (str): The persona description for the agent.
+            knowledge (str): The knowledge base to use for generating responses.
+            base_url (str, optional): The base URL for the OpenAI API.
+                                      Defaults to "https://openai.vocareum.com/v1".
+            model (str, optional): The model to use for the API calls.
+                                   Defaults to "gpt-4.1-nano".
+        """
+        self.openai_api_key = openai_api_key
+        self.persona = persona
+        self.knowledge = knowledge
+        self.base_url = base_url
+        self.model = model
+
+    def respond(self, user_prompt):
         """Generate a response using the OpenAI API."""
-        client = OpenAI(api_key=self.openai_api_key)
+        client = OpenAI(
+            api_key=self.openai_api_key,
+            base_url=self.base_url
+            )
+
+        system_prompt = f"""
+        The persona given to you is: {self.persona}. Forget previous context.\n
+        Use only the following knowledge to answer, do not use your own knowledge: {self.knowledge}\n
+        Answer the prompt based on this knowledge, not your own."
+        """
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model=self.model,
             messages=[
-                # TODO: 2 - Construct a system message including:
-                #           - The persona with the following instruction:
-                #             "You are _persona_ knowledge-based assistant. Forget all previous context."
-                #           - The provided knowledge with this instruction:
-                #             "Use only the following knowledge to answer, do not use your own knowledge: _knowledge_"
-                #           - Final instruction:
-                #             "Answer the prompt based on this knowledge, not your own."
-                
-                # TODO: 3 - Add the user's input prompt here as a user message.
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
             ],
             temperature=0
         )
         return response.choices[0].message.content
-'''
 
 # RAGKnowledgePromptAgent class definition
 class RAGKnowledgePromptAgent:
@@ -115,20 +137,26 @@ class RAGKnowledgePromptAgent:
     and leverages embeddings to respond to prompts based solely on retrieved information.
     """
 
-    def __init__(self, openai_api_key, persona, chunk_size=2000, chunk_overlap=100):
+    def __init__(self, openai_api_key, persona, chunk_size=2000, chunk_overlap=100, base_url="https://openai.vocareum.com/v1", model="gpt-4.1-nano"):
         """
         Initializes the RAGKnowledgePromptAgent with API credentials and configuration settings.
 
         Parameters:
-        openai_api_key (str): API key for accessing OpenAI.
-        persona (str): Persona description for the agent.
-        chunk_size (int): The size of text chunks for embedding. Defaults to 2000.
-        chunk_overlap (int): Overlap between consecutive chunks. Defaults to 100.
+            openai_api_key (str): The API key for OpenAI.
+            persona (str): The persona description for the agent.
+            chunk_size (int): The size of text chunks for embedding. Defaults to 2000.
+            chunk_overlap (int): Overlap between consecutive chunks. Defaults to 100.
+            base_url (str, optional): The base URL for the OpenAI API.
+                                      Defaults to "https://openai.vocareum.com/v1".
+            model (str, optional): The model to use for the API calls.
+                                   Defaults to "gpt-4.1-nano".
         """
         self.persona = persona
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.openai_api_key = openai_api_key
+        self.model = model
+        self.base_url = base_url
         self.unique_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}.csv"
 
     def get_embedding(self, text):
@@ -236,9 +264,9 @@ class RAGKnowledgePromptAgent:
 
         client = OpenAI(base_url="https://openai.vocareum.com/v1", api_key=self.openai_api_key)
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model=self.model,
             messages=[
-                {"role": "system", "content": f"You are {self.persona}, a knowledge-based assistant. Forget previous context."},
+                {"role": "system", "content": f"The persona given to you is: {self.persona}. Forget previous context."},
                 {"role": "user", "content": f"Answer based only on this information: {best_chunk}. Prompt: {prompt}"}
             ],
             temperature=0

@@ -19,9 +19,11 @@ direct_agent = DirectPromptAgent(
 direct_agent_response = direct_agent.respond(prompt)
 
 # Print the response from the agent
-print(direct_agent_response)
-
-# TODO: 5 - Print an explanatory message describing the knowledge source used by the agent to generate the response
 print("-" * 50)
 print("=== Direct Prompt Agent Response ===")
+print(direct_agent_response)
+print("-" * 50)
+
+# TODO: 5 - Print an explanatory message describing the knowledge source used by the agent to generate the response
 print("The response was generated using the OpenAI API with the provided prompt. No system prompt or other context was used.")
+print("-" * 50)
