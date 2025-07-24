@@ -472,23 +472,49 @@ class RoutingAgent():
         return best_agent["func"](user_input)
 
 
-'''
 class ActionPlanningAgent:
+    """
+    An agent that plans actions
+    """
 
-    def __init__(self, openai_api_key, knowledge):
-        # TODO: 1 - Initialize the agent attributes here
+    def __init__(self, openai_api_key, knowledge, base_url="https://openai.vocareum.com/v1", model="gpt-4.1-nano"):
+        """
+        Initializes the ActionPlanningAgent with API credentials and configuration settings.
+
+        Parameters:
+            openai_api_key (str): The API key for OpenAI.
+            agents (list): A list of agent objects that the router can choose from. Each agent should be a dictionary with keys "name", "description", and "func" (the function to call for that agent).
+            base_url (str, optional): The base URL for the OpenAI API.
+                                      Defaults to "https://openai.vocareum.com/v1".
+            model (str, optional): The model to use for the API calls.
+                                   Defaults to "gpt-4.1-nano".
+        """
+
+        self.openai_api_key = openai_api_key
+        self.knowledge = knowledge
+        self.model = model
+        self.base_url = base_url
 
     def extract_steps_from_prompt(self, prompt):
 
-        # TODO: 2 - Instantiate the OpenAI client using the provided API key
-        # TODO: 3 - Call the OpenAI API to get a response from the "gpt-3.5-turbo" model.
-        # Provide the following system prompt along with the user's prompt:
-        # "You are an action planning agent. Using your knowledge, you extract from the user prompt the steps requested to complete the action the user is asking for. You return the steps as a list. Only return the steps in your knowledge. Forget any previous context. This is your knowledge: {pass the knowledge here}"
+        client = OpenAI(base_url=self.base_url, api_key=self.openai_api_key)
+        # TODO: 3 - Call the OpenAI API to get a response from the "gpt-3.5-turbo" model. --> Chose to use gpt-4.1-nano as it is a newer model with better performance.
+        system_prompt = (
+            f"You are an action planning agent. Using your knowledge, you extract from the user prompt the steps requested to complete the action the user is asking for. "
+            f"You return the steps as a list. Only return the steps in your knowledge. Forget any previous context. This is your knowledge: {self.knowledge}"
+        )
 
-        response_text = ""  # TODO: 4 - Extract the response text from the OpenAI API response
+        response = client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": f"{system_prompt}"},
+                {"role": "user", "content": f"{prompt}"}
+            ],
+            temperature=0
+        )
+        response_text = response.choices[0].message.content.strip()
 
-        # TODO: 5 - Clean and format the extracted steps by removing empty lines and unwanted text
+        # TODO: 5 - Clean and format the extracted steps by removing empty lines and unwanted text --> No unwanted text seems present in the answers.
         steps = response_text.split("\n")
 
         return steps
-'''
