@@ -277,9 +277,15 @@ class RAGKnowledgePromptAgent:
         return response.choices[0].message.content
     
     def respond(self, prompt):
+        """
+        Alias method for self.find_prompt_in_knowledge to allow the agent to be used like a worker agent.
+        """
         return self.find_prompt_in_knowledge(prompt)
 
 class EvaluationAgent:
+    """
+    An agent that evaluates responses from another agent based on predefined criteria. Worker agents' responses are iteratively refined until they meet the evaluation criteria or the maximum number of interactions is reached.
+    """
     
     def __init__(self, openai_api_key, persona, evaluation_criteria, worker_agent, max_interactions, base_url="https://openai.vocareum.com/v1", model="gpt-4.1-nano"):
         """
@@ -305,7 +311,14 @@ class EvaluationAgent:
         self.max_interactions = max_interactions
 
     def evaluate(self, initial_prompt):
-        # This method manages interactions between agents to achieve a solution.
+        """
+        Tries to create a valid response to an initial prompt by iteratively refining the worke agent's response based on the evaluation agent's evaluation criteria.
+        Parameters: 
+            initial_prompt (str): The initial user prompt to evaluate.
+        Returns: 
+             dict: A dictionary containing the final response ('final_response'), evaluation ('evaluation'), and number of iterations ('num_iterations').
+        """
+
         client = OpenAI(base_url=self.base_url, api_key=self.openai_api_key)
         prompt_to_evaluate = initial_prompt
 
@@ -362,42 +375,95 @@ class EvaluationAgent:
                     f"Make only these corrections, do not alter content validity: {instructions}"
                 )
         return {
-            # TODO: 7 - Return a dictionary containing the final response, evaluation, and number of iterations
+            # TODO: 7 - Return a dictionary containing the final response, evaluation, and number of iterations - DONE, left here for reference
             'final_response': response_from_worker,
             'evaluation': evaluation,
             'num_iterations': i + 1
-        }   
+        }
 
-'''
+    def respond(self, prompt):
+        """
+        Alias method for self.evaluate to allow the agent to be used like a worker agent.
+
+        Parameters:
+            prompt (str): The user input prompt to evaluate.
+
+        Returns:
+            dict: A dictionary containing the final response ('final_response'), evaluation ('evaluation'), and number of iterations ('num_iterations').
+        """
+        
+        return self.evaluate(prompt)
+
 class RoutingAgent():
+    """
+    An agent that plans which agent to send a user prompt to. 
+    """
+    def __init__(self, openai_api_key, agents, base_url="https://openai.vocareum.com/v1", model="gpt-4.1-nano"):
+        """
+        Initializes the RoutingAgent with API credentials and configuration settings.
 
-    def __init__(self, openai_api_key, agents):
+        Parameters:
+            openai_api_key (str): The API key for OpenAI.
+            agents (list): A list of agent objects that the router can choose from. Each agent should be a dictionary with keys "name", "description", and "func" (the function to call for that agent).
+            base_url (str, optional): The base URL for the OpenAI API.
+                                      Defaults to "https://openai.vocareum.com/v1".
+            model (str, optional): The model to use for the API calls.
+                                   Defaults to "gpt-4.1-nano".
+        """
         # Initialize the agent with given attributes
         self.openai_api_key = openai_api_key
-        # TODO: 1 - Define an attribute to hold the agents, call it agents
+        self.agents = agents
+        self.model = model
+        self.base_url = base_url
 
     def get_embedding(self, text):
-        client = OpenAI(api_key=self.openai_api_key)
-        # TODO: 2 - Write code to calculate the embedding of the text using the text-embedding-3-large model
-        # Extract and return the embedding vector from the response
+        """
+        Fetches the embedding vector for given text using OpenAI's embedding API.
+
+        Parameters:
+        text (str): Text to embed.
+
+        Returns:
+        list: The embedding vector.
+        """
+        client = OpenAI(base_url=self.base_url, api_key=self.openai_api_key)
+        response = client.embeddings.create(
+            model="text-embedding-3-large",
+            input=text,
+            encoding_format="float"
+        )
+
         embedding = response.data[0].embedding
         return embedding 
 
     # TODO: 3 - Define a method to route user prompts to the appropriate agent
+    def route(self, user_input):
+        """
+        Routes the user input to the most suitable agent based on the similarity of the input to the agent descriptions.
+        Parameters:
+            user_input (str): The user input prompt to route.
+        Returns:
+            str: The response from the selected agent.
+        """
         # TODO: 4 - Compute the embedding of the user input prompt
-        input_emb = 
+        input_emb = self.get_embedding(user_input)
         best_agent = None
         best_score = -1
 
         for agent in self.agents:
             # TODO: 5 - Compute the embedding of the agent description
+            agent_emb = self.get_embedding(agent["name"] + ": " + agent["description"])
+
             if agent_emb is None:
                 continue
 
             similarity = np.dot(input_emb, agent_emb) / (np.linalg.norm(input_emb) * np.linalg.norm(agent_emb))
-            print(similarity)
+            # print(similarity) # Commented out since it clutters the output, but can be useful for debugging
 
             # TODO: 6 - Add logic to select the best agent based on the similarity score between the user prompt and the agent descriptions
+            if similarity > best_score:
+                best_score = similarity
+                best_agent = agent
 
         if best_agent is None:
             return "Sorry, no suitable agent could be selected."
@@ -405,7 +471,6 @@ class RoutingAgent():
         print(f"[Router] Best agent: {best_agent['name']} (score={best_score:.3f})")
         return best_agent["func"](user_input)
 
-'''
 
 '''
 class ActionPlanningAgent:
