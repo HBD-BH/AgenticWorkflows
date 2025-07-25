@@ -6,6 +6,9 @@ import csv
 import uuid
 from datetime import datetime
 
+# The model to use for the OpenAI API
+MODEL = "gpt-3.5-turbo"
+# MODEL = "gpt-4.1-nano" # I would prefer to use the newer model, but the rubric demands the use of gpt-3.5-turbo
 
 # DirectPromptAgent class definition
 class DirectPromptAgent:
@@ -13,7 +16,7 @@ class DirectPromptAgent:
     An agent that directly responds to user prompts without any additional context or system prompts.
     """
 
-    def __init__(self, openai_api_key, base_url="https://openai.vocareum.com/v1", model="gpt-4.1-nano"):
+    def __init__(self, openai_api_key, base_url="https://openai.vocareum.com/v1", model=MODEL):
         """
         Initializes the DirectPromptAgent with API key, base URL, and model.
 
@@ -22,7 +25,7 @@ class DirectPromptAgent:
             base_url (str, optional): The base URL for the OpenAI API.
                                       Defaults to "https://openai.vocareum.com/v1".
             model (str, optional): The model to use for the API calls.
-                                   Defaults to "gpt-4.1-nano".
+                                   Defaults to "gpt-3.5-turbo".
         """
         self.openai_api_key = openai_api_key
         self.base_url = base_url
@@ -50,7 +53,7 @@ class AugmentedPromptAgent:
     """
     An agent that uses a persona to generate responses based on user prompts.
     """
-    def __init__(self, openai_api_key, persona, base_url="https://openai.vocareum.com/v1", model="gpt-4.1-nano"):
+    def __init__(self, openai_api_key, persona, base_url="https://openai.vocareum.com/v1", model=MODEL):
         """
         Initializes the AugmentedPromptAgent with API key, persona, base URL, and model.
 
@@ -60,7 +63,7 @@ class AugmentedPromptAgent:
             base_url (str, optional): The base URL for the OpenAI API.
                                       Defaults to "https://openai.vocareum.com/v1".
             model (str, optional): The model to use for the API calls.
-                                   Defaults to "gpt-4.1-nano".
+                                   Defaults to "gpt-3.5-turbo".
         """
         self.openai_api_key = openai_api_key
         self.persona = persona
@@ -89,7 +92,7 @@ class KnowledgeAugmentedPromptAgent:
     """
     An agent that uses a persona and a knowledge base to generate responses. It only consults the knowledge base for answers.
     """
-    def __init__(self, openai_api_key, persona, knowledge, base_url="https://openai.vocareum.com/v1", model="gpt-4.1-nano"):
+    def __init__(self, openai_api_key, persona, knowledge, base_url="https://openai.vocareum.com/v1", model=MODEL):
         """
         Initializes the KnowledgeAugmentedPromptAgent with API key, persona, knowledge, base URL, and model.
 
@@ -100,7 +103,7 @@ class KnowledgeAugmentedPromptAgent:
             base_url (str, optional): The base URL for the OpenAI API.
                                       Defaults to "https://openai.vocareum.com/v1".
             model (str, optional): The model to use for the API calls.
-                                   Defaults to "gpt-4.1-nano".
+                                   Defaults to "gpt-3.5-turbo".
         """
         self.openai_api_key = openai_api_key
         self.persona = persona
@@ -137,7 +140,7 @@ class RAGKnowledgePromptAgent:
     and leverages embeddings to respond to prompts based solely on retrieved information.
     """
 
-    def __init__(self, openai_api_key, persona, chunk_size=2000, chunk_overlap=100, base_url="https://openai.vocareum.com/v1", model="gpt-4.1-nano"):
+    def __init__(self, openai_api_key, persona, chunk_size=2000, chunk_overlap=100, base_url="https://openai.vocareum.com/v1", model=MODEL):
         """
         Initializes the RAGKnowledgePromptAgent with API credentials and configuration settings.
 
@@ -149,7 +152,7 @@ class RAGKnowledgePromptAgent:
             base_url (str, optional): The base URL for the OpenAI API.
                                       Defaults to "https://openai.vocareum.com/v1".
             model (str, optional): The model to use for the API calls.
-                                   Defaults to "gpt-4.1-nano".
+                                   Defaults to "gpt-3.5-turbo".
         """
         self.persona = persona
         self.chunk_size = chunk_size
@@ -287,7 +290,7 @@ class EvaluationAgent:
     An agent that evaluates responses from another agent based on predefined criteria. Worker agents' responses are iteratively refined until they meet the evaluation criteria or the maximum number of interactions is reached.
     """
     
-    def __init__(self, openai_api_key, persona, evaluation_criteria, worker_agent, max_interactions, base_url="https://openai.vocareum.com/v1", model="gpt-4.1-nano"):
+    def __init__(self, openai_api_key, persona, evaluation_criteria, worker_agent, max_interactions, base_url="https://openai.vocareum.com/v1", model=MODEL):
         """
         Initializes the EvaluationAgent with API credentials and configuration settings.
 
@@ -300,7 +303,7 @@ class EvaluationAgent:
             base_url (str, optional): The base URL for the OpenAI API.
                                       Defaults to "https://openai.vocareum.com/v1".
             model (str, optional): The model to use for the API calls.
-                                   Defaults to "gpt-4.1-nano".
+                                   Defaults to "gpt-3.5-turbo".
         """
         self.persona = persona
         self.openai_api_key = openai_api_key
@@ -312,7 +315,7 @@ class EvaluationAgent:
 
     def evaluate(self, initial_prompt):
         """
-        Tries to create a valid response to an initial prompt by iteratively refining the worke agent's response based on the evaluation agent's evaluation criteria.
+        Tries to create a valid response to an initial prompt by iteratively refining the worker agent's response based on the evaluation agent's evaluation criteria.
         Parameters: 
             initial_prompt (str): The initial user prompt to evaluate.
         Returns: 
@@ -398,7 +401,7 @@ class RoutingAgent():
     """
     An agent that plans which agent to send a user prompt to. 
     """
-    def __init__(self, openai_api_key, agents, base_url="https://openai.vocareum.com/v1", model="gpt-4.1-nano"):
+    def __init__(self, openai_api_key, agents, base_url="https://openai.vocareum.com/v1", model=MODEL):
         """
         Initializes the RoutingAgent with API credentials and configuration settings.
 
@@ -408,7 +411,7 @@ class RoutingAgent():
             base_url (str, optional): The base URL for the OpenAI API.
                                       Defaults to "https://openai.vocareum.com/v1".
             model (str, optional): The model to use for the API calls.
-                                   Defaults to "gpt-4.1-nano".
+                                   Defaults to "gpt-3.5-turbo".
         """
         # Initialize the agent with given attributes
         self.openai_api_key = openai_api_key
@@ -477,7 +480,7 @@ class ActionPlanningAgent:
     An agent that plans actions
     """
 
-    def __init__(self, openai_api_key, knowledge, base_url="https://openai.vocareum.com/v1", model="gpt-4.1-nano"):
+    def __init__(self, openai_api_key, knowledge, base_url="https://openai.vocareum.com/v1", model=MODEL):
         """
         Initializes the ActionPlanningAgent with API credentials and configuration settings.
 
@@ -487,7 +490,7 @@ class ActionPlanningAgent:
             base_url (str, optional): The base URL for the OpenAI API.
                                       Defaults to "https://openai.vocareum.com/v1".
             model (str, optional): The model to use for the API calls.
-                                   Defaults to "gpt-4.1-nano".
+                                   Defaults to "gpt-3.5-turbo".
         """
 
         self.openai_api_key = openai_api_key
@@ -498,7 +501,6 @@ class ActionPlanningAgent:
     def extract_steps_from_prompt(self, prompt):
 
         client = OpenAI(base_url=self.base_url, api_key=self.openai_api_key)
-        # TODO: 3 - Call the OpenAI API to get a response from the "gpt-3.5-turbo" model. --> Chose to use gpt-4.1-nano as it is a newer model with better performance.
         system_prompt = (
             f"You are an action planning agent. Using your knowledge, you extract from the user prompt the steps requested to complete the action the user is asking for. "
             f"You return the steps as a list. Only return the steps in your knowledge. Forget any previous context. This is your knowledge: {self.knowledge}"
