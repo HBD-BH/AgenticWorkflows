@@ -131,6 +131,7 @@ class KnowledgeAugmentedPromptAgent:
             ],
             temperature=0
         )
+        print(f"[KnowledgeAugmentedPromptAgent] Responding to prompt: {user_prompt}")
         return response.choices[0].message.content
 
 # RAGKnowledgePromptAgent class definition

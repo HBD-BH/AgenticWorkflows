@@ -33,9 +33,8 @@ num_iterations = result_dict['num_iterations']
 
 # TODO: 4 - Evaluate the prompt and print the response from the EvaluationAgent
 print("-" * 50)
-print("=== Evaluation Agent Response ===")
 print(f"Prompt: {prompt}")
-print("-" * 10)
+print("=== Evaluation Agent Response ===")
 print(f"Final response: {final_response}")
 print(f"Evaluation: {evaluation}")
 print(f"Number of iterations: {num_iterations}")

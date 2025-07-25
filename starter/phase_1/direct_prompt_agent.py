@@ -20,6 +20,7 @@ direct_agent_response = direct_agent.respond(prompt)
 
 # Print the response from the agent
 print("-" * 50)
+print(f"Prompt: {prompt}")
 print("=== Direct Prompt Agent Response ===")
 print(direct_agent_response)
 print("-" * 50)

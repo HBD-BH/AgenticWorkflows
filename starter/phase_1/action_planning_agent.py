@@ -44,4 +44,8 @@ prompt = "One morning I wanted to have scrambled eggs"
 
 response = action_planning_agent.extract_steps_from_prompt(prompt)
 response_string = "\n".join(response) if isinstance(response, list) else response
-print(f"ActionPlanningAgent response to '{prompt}':\n{response_string}")
+print("-" * 50)
+print(f"Prompt: {prompt}")
+print("=== Action Planning Agent Response ===")
+print(f"{response_string}")
+print("-" * 50)

@@ -55,9 +55,8 @@ response = RAG_knowledge_prompt_agent.find_prompt_in_knowledge(prompt)
 
 # Print the prompt and the response from the agent
 print("-" * 50)
-print("=== RAG-Augmented Prompt Agent Response ===")
 print(f"Prompt: {prompt}")
-print("-" * 10)
+print("=== RAG-Augmented Prompt Agent Response ===")
 print(response)
 print("-" * 50)
 

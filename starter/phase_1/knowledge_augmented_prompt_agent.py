@@ -27,6 +27,7 @@ knowledge_agent = KnowledgeAugmentedPromptAgent(
 knowledge_agent_response = knowledge_agent.respond(prompt)
 
 print("-" * 50)
+print(f"Prompt: {prompt}")
 print("=== Knowledge Augmented Prompt Agent Response ===")
 print(knowledge_agent_response)
 print("-" * 50)

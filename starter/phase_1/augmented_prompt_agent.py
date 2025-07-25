@@ -24,6 +24,7 @@ augmented_agent_response = augmented_agent.respond(prompt)
 # - How the system prompt specifying the persona affected the agent's response.
 # TODO: 5 - Print an explanatory message describing the knowledge source used by the agent to generate the response
 print("-" * 50)
+print(f"Prompt: {prompt}")
 print("=== Augmented Prompt Agent Response ===")
 print(augmented_agent_response)
 print("-" * 50)
