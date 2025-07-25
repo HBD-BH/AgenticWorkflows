@@ -18,7 +18,9 @@ A `requirements.txt` file has been provided in this repo if you want to run the 
 You can find instructions for each of the two phases of the project in the README file inside the folder for that phase.
 
 ## License
-[License](./LICENSE.md)
+MIT License see [here](./LICENSE.md). 
+
+Chosen based on [this mentor answer](https://knowledge.udacity.com/questions/155958).
 
 ## Udacity Honor Code
 See [Udacity Honor Code](https://support.udacity.com/hc/en-us/articles/210667103-Udacity-Honor-Code).
