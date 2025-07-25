@@ -34,11 +34,10 @@ except Exception as e:
 # Action Planning Agent
 ########################
 knowledge_action_planning = """
-    Stories are defined from a product spec by identifying a persona, an action, and a desired outcome for each story. 
-    Each story represents a specific functionality of the product described in the specification. \n"
-    Features are defined by grouping related user stories. \n
-    Tasks are defined for each story and represent the engineering work required to develop the product. \n
-    A development Plan for a product contains all these components
+    # Development Plan for Product Management Workflow
+    1. Define user stories based on the product specification.
+    2. Group user stories into features.
+    3. Define development tasks for each feature.
 """
 action_planning_agent = ActionPlanningAgent(
     openai_api_key=open_ai_key,
@@ -111,7 +110,7 @@ program_manager_evaluation_agent = EvaluationAgent(
 # Development Engineer - Knowledge Augmented Prompt Agent
 ########################
 persona_dev_engineer = "You are a Development Engineer, you are responsible for defining the development tasks for a product."
-knowledge_dev_engineer = "Development tasks are defined by identifying what needs to be built to implement each user story."
+knowledge_dev_engineer = "Development tasks are defined by identifying what needs to be built to implement each user story, including acceptance criteria, effort estimates, and dependencies. Make sure to include tasks for all features in your response, not just for a subset of the features."
 development_engineer_knowledge_agent = KnowledgeAugmentedPromptAgent(
     openai_api_key=open_ai_key,
     persona=persona_dev_engineer,
@@ -124,13 +123,15 @@ development_engineer_knowledge_agent = KnowledgeAugmentedPromptAgent(
 persona_dev_engineer_eval = "You are an evaluation agent that checks the answers of other worker agents."
 evaluation_criteria_dev_engineer = """
 The answer should be tasks following this exact structure: 
-Task ID: A unique identifier for tracking purposes\n
-Task Title: Brief description of the specific development work\n
-Related User Story: Reference to the parent user story\n
-Description: Detailed explanation of the technical work required\n
-Acceptance Criteria: Specific requirements that must be met for completion\n
-Estimated Effort: Time or complexity estimation\n
-Dependencies: Any tasks that must be completed first
+- Task ID: A unique identifier for tracking purposes\n
+- Task Title: Brief description of the specific development work\n
+- Related User Story: Reference to the parent user story\n
+- Description: Detailed explanation of the technical work required\n
+- Acceptance Criteria: Specific requirements that must be met for completion\n
+- Estimated Effort: Time or complexity estimation\n
+- Dependencies: Any tasks that must be completed first
+
+The answer should contain tasks related to all the features as passed in the initial prompt, not just a subset of the features.
 """
 development_engineer_evaluation_agent = EvaluationAgent(
     openai_api_key=open_ai_key,
@@ -143,7 +144,6 @@ development_engineer_evaluation_agent = EvaluationAgent(
 ########################
 # Routing Agent
 ########################
-# TODO: 10 - Instantiate a routing_agent. You will need to define a list of agent dictionaries (routes) for Product Manager, Program Manager, and Development Engineer. Each dictionary should contain 'name', 'description', and 'func' (linking to a support function). Assign this list to the routing_agent's 'agents' attribute.
 # TODO: 11 - Define the support functions for the routes of the routing agent (e.g., product_manager_support_function, program_manager_support_function, development_engineer_support_function).
 # Each support function should:
 #   1. Take the input query (e.g., a step from the action plan).
@@ -152,8 +152,11 @@ development_engineer_evaluation_agent = EvaluationAgent(
 #   4. Return the final validated response.
 # Comment: 
 # - the ***_evaluation_agent.evaluate() method will be used to evaluate the response of the ***_knowledge_agent.respond() method
-# - besides, the ***_evaluation_agent.evaluate() methods expect an initial user prompt as input, not the response of the ***_knowledge_agent.respond() method
+# - besides, the ***_evaluation_agent.evaluate() methods expect an initial user prompt as input, not the response of the ***_knowledge_agent.respond() method 
+#   - this was defined in phase 1, and is also demanded by the project rubric. 
+#   - if one really wants to call the '.respond()' functions, first, one could change the '.evaluate()' method to accept an optional 'isworkerresponse' parameter to indicate that the `initial_prompt` is actually a response from the worker agent, and not a user prompt.
 # - therefore, the support functions do not invoke the ***_knowledge_agent.respond() method, first, but rather call the ***_evaluation_agent.evaluate() method
+
 # Job function persona support functions
 def product_manager_support_function(query):
     """
@@ -185,17 +188,17 @@ def development_engineer_support_function(query):
 agents = [
     {
         "name": "product manager",
-        "description": "The product manager agent defines user stories for the product",
+        "description": "The product manager agent defines user stories based on the product specification",
         "func": product_manager_support_function
     },
     {
         "name": "program manager",
-        "description": "The program manager agent defines features for the product",
+        "description": "The program manager agent defines features for the product based on user stories",
         "func": program_manager_support_function
     },
     {
         "name": "development engineer",
-        "description": "The development engineer agent defines development tasks for the product",
+        "description": "The development engineer agent defines development tasks for each feature of the product",
         "func": development_engineer_support_function
     }
 ]
@@ -207,24 +210,36 @@ routing_agent = RoutingAgent(open_ai_key, agents=agents)
 
 print("\n*** Workflow execution started ***\n")
 # Workflow Prompt
-# ****
 workflow_prompt = "What would the development tasks for this product be?"
-# ****
 print(f"Task to complete in this workflow, workflow prompt = {workflow_prompt}")
+print("-" * 50)
 
 print("\nDefining workflow steps from the workflow prompt")
 response = action_planning_agent.extract_steps_from_prompt(workflow_prompt)
 assert isinstance(response, list), "The response should be a list of steps."
 # Concatenate the steps into a single string for better readability
-response_string = "\n".join(response) if isinstance(response, list) else response
+response_string = "\n".join(response) 
 print(f"ActionPlanningAgent response to workflow prompt:\n{response_string}")
+print("-" * 50)
 
 completed_steps = []
-for step in response:
+for i in range(len(response)):
+    step = response[i]
     print("-" * 50)
     print(f"\nExecuting step: {step}")
-    # Route the step to the appropriate support function using the routing agent
-    result = routing_agent.route(step)
+    # Route the step and any prior output to the appropriate support function using the routing agent
+    if i > 0:
+        # If this is not the first step, include the last completed step as context
+        routing_query = f"""Input from previous step:
+        {completed_steps[-1]}
+        The step you should perform: 
+        {step}
+"""
+    else:
+        # If this is the first step, just use the step itself
+        routing_query = step
+    result = routing_agent.route(routing_query)
+    print("-" * 20)
     completed_steps.append(result)
     print(f"Result of step '{step}': {result}")
     print("-" * 50)
@@ -237,23 +252,17 @@ if completed_steps:
 else:
     print("No steps were completed in the workflow.")
 
-# TODO: 12 - Implement the workflow.
-#   1. Use the 'action_planning_agent' to extract steps from the 'workflow_prompt'.
-#   2. Initialize an empty list to store 'completed_steps'.
-#   3. Loop through the extracted workflow steps:
-#      a. For each step, use the 'routing_agent' to route the step to the appropriate support function.
-#      b. Append the result to 'completed_steps'.
-#      c. Print information about the step being executed and its result.
-#   4. After the loop, print the final output of the workflow (the last completed step).
 
 ########################
 ### REAMAINING TODOS ### 
 ########################
-# Phase 1: 
-# Submit evidence of successful test script execution in extra word/pdf file
 
 # Phase 2:
-# Comment & document the code in all files
-# Change eval_agent.evaluate to accept a knowledge_agent response, not user input, as initial input
-# Change the _support_functions
 # Potentially change the final output of this python file to summarize all user stories, features, and development tasks.
+
+# Generate summary
+print("-" * 50)
+print("=== Summary of Completed Steps ===")
+for i in range(min(len(completed_steps), len(response))):
+    print("-" * 20)
+    print(f"Step {i+1}: {response[i]}\n{completed_steps[i]}")
