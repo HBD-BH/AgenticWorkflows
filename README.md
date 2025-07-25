@@ -1,18 +1,26 @@
 # AI-Powered Agentic Workflow for Project Management
 
-In this repo, you will find all the files and instructions required to complete the project. You can find more information about the project inside the Udacity Classroom.
+This repo is my solution to project 2 of the Agentic AI Nanodegree Program from Udacity.   
+Completion date: July 25, 2025  
 
-## Getting Started
+## Project Description
 
-The project needs to be completed in two phases and you will find starter code for both the phases inside the `starter` folder in this repo. 
+This project is comprised of two phases. 
+- Phase 1: Setup and testing of a comprehensive agent library
+- Phase 2: Using the agents in an agentic workflow for a software development project
 
 ## Dependencies
 
-A `requirements.txt` file has been provided in this repo if you want to work on the project locally. Otherwise, the workspace provided in the Udacity classroom has been configured with all the required libraries. 
+A `requirements.txt` file has been provided in this repo if you want to run the project yourself.
 
 ## Project Instructions
 
-You will find instructions for each of the two phases of the project in the README file inside the folder for that phase.
+You can find instructions for each of the two phases of the project in the README file inside the folder for that phase.
 
 ## License
 [License](./LICENSE.md)
+
+## Udacity Honor Code
+See [Udacity Honor Code](https://support.udacity.com/hc/en-us/articles/210667103-Udacity-Honor-Code).
+
+I confirm that this submission is my own work. I have not used code from any other Udacity student's or graduate's submission of the same project. I have correctly attributed all code I have obtained from other sources, such as websites, books, forums, blogs, GitHub repos, etc. I understand that Udacity will check my submission for plagiarism, and that failure to adhere to the Udacity Honor Code may result in the cancellation of my enrollment.
